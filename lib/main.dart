@@ -1,8 +1,8 @@
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:rest_api_practice/models/user-model.dart';
+import 'package:rest_api_practice/screens/products.dart';
 import 'package:rest_api_practice/screens/users.dart';
 
 void main() async {
@@ -31,7 +31,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.red,
       ),
-      home: const MyHomePage(),
+      home: const Products(),
     );
   }
 }
@@ -161,14 +161,29 @@ class _MyHomePageState extends State<MyHomePage> {
                 ),
               ],
             ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => Users()),
-                );
-              },
-              child: const Text('User page'),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => Users()),
+                    );
+                  },
+                  child: const Text('User page'),
+                ),
+                SizedBox(width: 10),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => Products()),
+                    );
+                  },
+                  child: const Text('Products page'),
+                ),
+              ],
             ),
           ],
         ),
