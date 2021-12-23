@@ -5,30 +5,34 @@ import 'package:rest_api_practice/models/product_data.dart';
 import 'package:http/http.dart' as http;
 
 List<Product> products = [];
-int productsLength = 0;
+int productsLength = products.length;
+int totalProducts = 0;
+int currentPage = 1;
+ScrollController scrollController = ScrollController();
 
-Future<ProductData> getProducts() async {
-  print('Products: ${products.length}');
+Future getProducts(int page) async {
   try {
-    var productUrl =
-        Uri.parse('https://sabziwala-admin.bdlancers.com/api/products');
+    var productUrl = Uri.parse(
+        'https://sabziwala-admin.bdlancers.com/api/products?page=$currentPage');
     var response = await http.get(productUrl);
-    print(response.statusCode);
     Map<String, dynamic> result = await jsonDecode(response.body);
-    print('Result: $result');
+    var data = ProductData.fromJson(result);
 
     if (response.statusCode == 200) {
-      // for (dynamic item in data.data) {
-      //   var prod = Product.fromJson(item);
-      //   products.add(prod);
-      // }
-      // return products;
-      // products = data.data;
+      products.clear();
+      for (dynamic item in data.data) {
+        // var prod = Product.fromJson(item);
+        products.add(item);
+        print('${item.id} - ADDED');
+      }
+      productsLength = products.length;
+      currentPage = data.meta.currentPage as int;
+      return products;
 
-      return ProductData.fromJson(result);
+      // return ProductData.fromJson(result);
     } else {
-      // return products;
-      return ProductData.fromJson(result);
+      return products;
+      // return ProductData.fromJson(result);
     }
   } catch (e) {
     print(e);
@@ -36,8 +40,29 @@ Future<ProductData> getProducts() async {
   }
 }
 
-class Products extends StatelessWidget {
+class Products extends StatefulWidget {
   const Products({Key? key}) : super(key: key);
+
+  @override
+  State<Products> createState() => _ProductsState();
+}
+
+class _ProductsState extends State<Products> {
+  @override
+  void initState() {
+    super.initState();
+    scrollController.addListener(() {
+      if (scrollController.position.pixels ==
+          scrollController.position.maxScrollExtent) {
+        // getMoreData();
+        setState(() {
+          currentPage++;
+        });
+        // getProducts(currentPage++);
+        print('load more - Current Page: $currentPage');
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -46,8 +71,8 @@ class Products extends StatelessWidget {
         title: Text('Products: $productsLength'),
       ),
       body: SafeArea(
-        child: FutureBuilder<ProductData>(
-          future: getProducts(),
+        child: FutureBuilder(
+          future: getProducts(1),
           builder: (BuildContext context, AsyncSnapshot snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const Center(
@@ -58,8 +83,11 @@ class Products extends StatelessWidget {
                 color: Colors.grey.shade200,
                 child: Column(
                   children: [
+                    Text('Products: $productsLength'),
+                    Text('Current Page: $currentPage'),
                     Expanded(
                       child: GridView.builder(
+                        controller: scrollController,
                         padding: const EdgeInsets.only(
                           top: 10,
                           left: 10,
@@ -72,9 +100,9 @@ class Products extends StatelessWidget {
                           mainAxisSpacing: 10,
                           childAspectRatio: 0.63,
                         ),
-                        itemCount: snapshot.data.data.length,
+                        itemCount: snapshot.data.length,
                         itemBuilder: (BuildContext context, int index) {
-                          final product = snapshot.data.data[index];
+                          final product = products[index];
                           return Stack(
                             children: [
                               Card(
