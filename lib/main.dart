@@ -47,9 +47,6 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  UserModel userModel = UserModel(id: 001, name: 'Fuad', age: 26);
-  String userJson = '{"id": "001", "name": "Fuad", "age": "26"}';
-
   int counter = 0;
   int _counter = 0;
 
@@ -80,8 +77,8 @@ class _MyHomePageState extends State<MyHomePage> {
       appBar: AppBar(
         title: Text('Flutter Demo Home Page: ' + (box.read('title') ?? 'n/a')),
       ),
-      body: SingleChildScrollView(
-        child: Center(
+      body: Center(
+        child: SingleChildScrollView(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
@@ -139,29 +136,6 @@ class _MyHomePageState extends State<MyHomePage> {
                   await box.write('settings', settings);
                 },
                 child: const Text('Save Settings'),
-              ),
-              Row(
-                children: [
-                  ElevatedButton(
-                    onPressed: () {
-                      print('user map: $userModel');
-                      Map<String, dynamic> userMap = userModel.toJson();
-                      var json = jsonEncode(userMap);
-                      print(json);
-                    },
-                    child: const Text('Serialize'),
-                  ),
-                  ElevatedButton(
-                    onPressed: () {
-                      print('userJson: $userJson');
-                      var decoded = jsonDecode(userJson);
-                      Map<String, dynamic> userMap = decoded;
-                      UserModel newUser = UserModel.fromJson(userMap);
-                      print('user map: $newUser'.toString());
-                    },
-                    child: const Text('Deserialize'),
-                  ),
-                ],
               ),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,

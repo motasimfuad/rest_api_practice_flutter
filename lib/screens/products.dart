@@ -1,42 +1,44 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:rest_api_practice/models/product_data.dart';
 import 'package:http/http.dart' as http;
 
 List<Product> products = [];
-int productsLength = products.length;
-int totalProducts = 0;
+var productsLength = products.length;
+var totalProducts = 0;
 int currentPage = 1;
-ScrollController scrollController = ScrollController();
+var totalPage;
+final ScrollController scrollController = ScrollController();
+final RefreshController refreshController = RefreshController();
 
-Future getProducts(int page) async {
+Future getProducts() async {
   try {
-    var productUrl = Uri.parse(
-        'https://sabziwala-admin.bdlancers.com/api/products?page=$currentPage');
+    var url =
+        'https://sabziwala-admin.bdlancers.com/api/products?page=$currentPage';
+    var productUrl = Uri.parse(url);
     var response = await http.get(productUrl);
     Map<String, dynamic> result = await jsonDecode(response.body);
     var data = ProductData.fromJson(result);
 
     if (response.statusCode == 200) {
-      products.clear();
-      for (dynamic item in data.data) {
-        // var prod = Product.fromJson(item);
-        products.add(item);
-        print('${item.id} - ADDED');
+      products.addAll(data.data);
+      print('data added');
+      totalPage = data.meta.lastPage;
+      if (currentPage < totalPage) {
+        currentPage++;
+      } else {
+        return;
       }
       productsLength = products.length;
-      currentPage = data.meta.currentPage as int;
       return products;
-
-      // return ProductData.fromJson(result);
     } else {
       return products;
-      // return ProductData.fromJson(result);
     }
   } catch (e) {
     print(e);
-    rethrow;
+    throw Exception;
   }
 }
 
@@ -54,12 +56,7 @@ class _ProductsState extends State<Products> {
     scrollController.addListener(() {
       if (scrollController.position.pixels ==
           scrollController.position.maxScrollExtent) {
-        // getMoreData();
-        setState(() {
-          currentPage++;
-        });
-        // getProducts(currentPage++);
-        print('load more - Current Page: $currentPage');
+        getProducts();
       }
     });
   }
@@ -68,11 +65,11 @@ class _ProductsState extends State<Products> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Products: $productsLength'),
+        title: const Text('Products'),
       ),
       body: SafeArea(
         child: FutureBuilder(
-          future: getProducts(1),
+          future: getProducts(),
           builder: (BuildContext context, AsyncSnapshot snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const Center(
@@ -100,7 +97,7 @@ class _ProductsState extends State<Products> {
                           mainAxisSpacing: 10,
                           childAspectRatio: 0.63,
                         ),
-                        itemCount: snapshot.data.length,
+                        itemCount: products.length,
                         itemBuilder: (BuildContext context, int index) {
                           final product = products[index];
                           return Stack(
@@ -108,7 +105,7 @@ class _ProductsState extends State<Products> {
                               Card(
                                 elevation: 0,
                                 child: Padding(
-                                  padding: const EdgeInsets.all(8.0),
+                                  padding: const EdgeInsets.all(8),
                                   child: Column(
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
@@ -139,7 +136,7 @@ class _ProductsState extends State<Products> {
                                           ),
                                           const SizedBox(height: 4),
                                           Text(
-                                            'Quantity: 1 ${product.unit!.name}',
+                                            'Quantity: 1 ${product.unit?.name}',
                                             style: const TextStyle(
                                               fontWeight: FontWeight.w500,
                                             ),
@@ -177,19 +174,16 @@ class _ProductsState extends State<Products> {
                                               ),
                                             ],
                                           ),
-                                          Container(
-                                            child: ElevatedButton(
-                                              style: ElevatedButton.styleFrom(
-                                                  primary: Colors.red.shade50,
-                                                  elevation: 0,
-                                                  fixedSize:
-                                                      const Size(10, 10)),
-                                              onPressed: () {},
-                                              child: const Icon(
-                                                Icons.shopping_cart_outlined,
-                                                size: 18,
-                                                color: Colors.red,
-                                              ),
+                                          ElevatedButton(
+                                            style: ElevatedButton.styleFrom(
+                                                primary: Colors.red.shade50,
+                                                elevation: 0,
+                                                fixedSize: const Size(10, 10)),
+                                            onPressed: () {},
+                                            child: const Icon(
+                                              Icons.shopping_cart_outlined,
+                                              size: 18,
+                                              color: Colors.red,
                                             ),
                                           ),
                                         ],
@@ -199,8 +193,8 @@ class _ProductsState extends State<Products> {
                                 ),
                               ),
                               Positioned(
-                                right: 15,
-                                top: 15,
+                                right: 15.0,
+                                top: 15.0,
                                 child: Icon(
                                   Icons.favorite_border_outlined,
                                   size: 28,
@@ -228,12 +222,18 @@ class _ProductsState extends State<Products> {
 }
 
 
-// ListView.builder(
-//                         itemCount: products.length,
-//                         itemBuilder: (context, index) {
-//                           final product = products[index];
-//                           return Card(
-//                             child: Text('${product.name}'),
-//                           );
-//                         },
-//                       ),
+
+
+
+                        // controller: refreshController,
+                        // enablePullUp: true,
+                        // enablePullDown: false,
+                        // onLoading: () async {
+                        //   final result = await getProducts();
+                        //         // print('load more - Current Page: $currentPage');
+                        //   if (result) {
+                        //     refreshController.loadComplete();
+                        //   } else {
+                        //     refreshController.loadFailed();
+                        //   }
+                        // },
